@@ -27,13 +27,18 @@ public class Controller extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String parser = request.getParameter("XMLParser");
+        if (request.getParameter("language") != null) {
+            request.getSession().setAttribute("language", request.getParameter("language"));
+        }
 
         TourBuilderFactory factory = new TourBuilderFactory();
         Set<TourVoucher> result = null;
 
         try {
             AbstractTourBuilder builder = factory.createTourBuilder(parser);
-            builder.buildSetTours("./data/voucher.xml", "./data/voucher.xsd");
+            String xml = getServletContext().getResource("/data/voucher.xml").getFile();
+            String xsd = getServletContext().getResource("/data/voucher.xsd").getFile();
+            builder.buildSetTours(xml, xsd);
             result = builder.getTours();
         } catch (TourBuilderFactoryException e) {
            // logger.error(e);
@@ -42,6 +47,7 @@ public class Controller extends HttpServlet {
         for (TourVoucher voucher : result) {
             tour += voucher;
         }
+        response.setContentType("text/html; charset=utf-8");
         request.setAttribute("parser", tour);
         request.getRequestDispatcher("/jsp/result.jsp").forward(request, response);
 
